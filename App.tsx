@@ -9,6 +9,7 @@ import { DigitalWallet } from './components/DigitalWallet';
 import { ForgotPasswordView } from './components/ForgotPasswordView';
 import { ProfileView } from './components/ProfileView';
 import { QrFullscreenView } from './components/QrFullscreenView';
+import { WebView } from './components/WebView';
 import { CitizenService } from './services/citizenService';
 import { ViewState, AuthState, LoginFormData, CitizenFormData } from './types';
 import { Toaster, toast } from 'react-hot-toast';
@@ -20,6 +21,9 @@ export default function App() {
     isLoading: false,
     error: null,
   });
+
+  // Estado para controlar qual URL abrir no WebView
+  const [webViewConfig, setWebViewConfig] = useState<{url: string, title: string} | null>(null);
 
   // UX Improvement: Reset scroll on view change
   const changeView = (newView: ViewState) => {
@@ -92,7 +96,27 @@ export default function App() {
     toast.success("Você saiu com segurança.");
   };
 
-  const handleServiceInteraction = () => {
+  const handleServiceInteraction = (serviceName?: string) => {
+    // 1. Serviços Públicos (Abrem WebView sem login)
+    if (serviceName === "Sala Empreendedor") {
+      setWebViewConfig({
+        url: 'https://empreendedor.mulungu.ce.gov.br/',
+        title: 'Sala do Empreendedor'
+      });
+      // Importante: Não mudamos a ViewState principal para não perder o contexto (Dashboard ou Home),
+      // apenas setamos a config do WebView que será renderizado por cima.
+      return; 
+    }
+
+    if (serviceName === "Carta de Serviços") {
+      setWebViewConfig({
+        url: 'https://www.mulungu.ce.gov.br/cartaservicos.php',
+        title: 'Carta de Serviços'
+      });
+      return;
+    }
+
+    // 2. Serviços Privados (Requerem Login)
     if (authState.user) {
       changeView(ViewState.DASHBOARD);
     } else {
@@ -101,8 +125,13 @@ export default function App() {
     }
   };
 
+  const handleCloseWebView = () => {
+    setWebViewConfig(null);
+    // Não precisamos mudar o viewState pois ele é um overlay agora
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-900 relative">
       <Toaster position="top-center" containerStyle={{ top: 80 }} />
       
       {/* HEADER OFICIAL */}
@@ -176,6 +205,15 @@ export default function App() {
 
       {/* FOOTER OFICIAL */}
       <OfficialFooter />
+
+      {/* WEBVIEW OVERLAY - Renderizado fora do fluxo principal para garantir tela cheia */}
+      {webViewConfig && (
+        <WebView 
+          url={webViewConfig.url}
+          title={webViewConfig.title}
+          onClose={handleCloseWebView}
+        />
+      )}
     </div>
   );
 }

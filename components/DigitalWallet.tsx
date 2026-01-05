@@ -1,9 +1,11 @@
-import React from 'react';
-import { Citizen } from '../types';
-import { QrCode, Sparkles, ShieldCheck, FileText, Calendar, Activity, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Citizen, Notification } from '../types';
+import { QrCode, Sparkles, ShieldCheck, FileText, Calendar, Activity, ChevronRight, Bell, BellRing, Clock } from 'lucide-react';
 import { ServiceGrid } from './ServiceGrid';
 import { NewsCarousel } from './NewsCarousel';
-import { GreetingHeader } from './GreetingHeader';
+import { DynamicHero } from './DynamicHero';
+import { ContextService } from '../services/citizenService';
+import { PwaInstaller } from './PwaInstaller';
 
 interface DigitalWalletProps {
   citizen: Citizen;
@@ -14,13 +16,43 @@ interface DigitalWalletProps {
 
 export const DigitalWallet: React.FC<DigitalWalletProps> = ({ citizen, onLogout, onViewProfile, onShowQrCode }) => {
   
-  const maskedCpf = citizen.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.***.***-$4");
+  // Mascarar CPF, exceto se for o usuário de teste que queremos ver claro no dev
+  const maskedCpf = citizen.cpf === "123.456.789-00" 
+    ? citizen.cpf 
+    : citizen.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.***.***-$4");
+    
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(true);
+
+  // Carrega notificações ao montar o componente
+  useEffect(() => {
+    const loadNotifs = async () => {
+      try {
+        const data = await ContextService.getNotifications(citizen.id);
+        setNotifications(data);
+      } catch (error) {
+        console.error("Erro ao carregar notificações", error);
+      } finally {
+        setLoadingNotifs(false);
+      }
+    };
+    loadNotifs();
+  }, [citizen.id]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const hasUnread = unreadCount > 0;
+  
+  // Verifica se tem agendamentos ativos
+  const activeAppointment = notifications.find(n => n.type === 'appointment');
 
   return (
     <div className="flex flex-col h-full animate-fade-in bg-slate-50 pb-12">
       
-      {/* 1. Header Atmosférico Personalizado */}
-      <GreetingHeader user={citizen} />
+      {/* TRIGGER PWA INSTALL MODAL AO LOGAR */}
+      <PwaInstaller mode="modal" />
+
+      {/* 1. Header Atmosférico Dinâmico */}
+      <DynamicHero user={citizen} />
 
       {/* Conteúdo Principal */}
       <div className="px-5 md:px-8 space-y-8 mt-6">
@@ -47,12 +79,27 @@ export const DigitalWallet: React.FC<DigitalWalletProps> = ({ citizen, onLogout,
             onClick={onShowQrCode}
             className="relative w-full aspect-[1.586/1] overflow-hidden rounded-3xl shadow-2xl transition-all duration-500 hover:scale-[1.02] cursor-pointer group"
           >
-            {/* Background Layers */}
-            <div className="absolute inset-0 bg-gradient-to-br from-mulungu-600 via-mulungu-700 to-mulungu-900"></div>
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse-slow"></div>
+            {/* --- BACKGROUND LAYERS --- */}
+            
+            {/* 1. Base Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-mulungu-600 via-mulungu-700 to-mulungu-900 z-0"></div>
+            
+            {/* 2. Watermark: Brasão Oficial (Logo Vazada) Centralizado */}
+            <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none opacity-10">
+               <img 
+                 src="https://www.mulungu.ce.gov.br/imagens/logovazada.png?time=1767550527" 
+                 alt="Marca D'água" 
+                 className="w-2/3 h-auto object-contain brightness-0 invert" 
+               />
+            </div>
 
-            {/* Conteúdo do Cartão */}
+            {/* 3. Texture Pattern */}
+            <div className="absolute inset-0 opacity-10 z-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
+            
+            {/* 4. Glow Effect */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse-slow z-0"></div>
+
+            {/* --- CONTEÚDO DO CARTÃO (z-10) --- */}
             <div className="absolute inset-0 p-5 sm:p-6 flex flex-col justify-between z-10">
               
               {/* Topo do Cartão */}
@@ -100,28 +147,84 @@ export const DigitalWallet: React.FC<DigitalWalletProps> = ({ citizen, onLogout,
             </div>
           </div>
         </section>
-        
-        {/* 4. Acesso Rápido (Novo Feature) */}
-        <section className="grid grid-cols-2 gap-4">
-          <button className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md hover:border-blue-100 transition-all text-left group">
-            <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-800">Agendamentos</p>
-              <p className="text-[10px] text-slate-400 font-medium">Consultas e Exames</p>
-            </div>
-          </button>
+
+        {/* 4. Notificações e Acesso Rápido */}
+        <section className="space-y-4">
           
-          <button className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md hover:border-rose-100 transition-all text-left group">
-            <div className="bg-rose-50 p-2.5 rounded-xl text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-colors">
-              <Activity className="w-5 h-5" />
+          {/* Se houver agendamento, mostra um card especial */}
+          {activeAppointment && (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-4 shadow-sm animate-slide-in">
+              <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600">
+                <Clock className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-blue-900 mb-0.5">Lembrete de Agendamento</h4>
+                <p className="text-xs text-blue-800 leading-snug">{activeAppointment.message}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-bold text-slate-800">Medicamentos</p>
-              <p className="text-[10px] text-slate-400 font-medium">Farmácia Básica</p>
-            </div>
-          </button>
+          )}
+
+          {/* Campo de Notificações Gerais */}
+          {!activeAppointment && (
+            <button 
+              className={`
+                w-full p-4 rounded-2xl border shadow-sm flex items-center gap-4 transition-all duration-300 group
+                ${hasUnread 
+                  ? 'bg-amber-50 border-amber-200 hover:shadow-md hover:border-amber-300' // Ativo
+                  : 'bg-white border-slate-100 hover:bg-slate-50' // Inativo
+                }
+              `}
+            >
+              <div className={`
+                p-3 rounded-full shrink-0 transition-colors
+                ${hasUnread ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}
+              `}>
+                {hasUnread 
+                  ? <BellRing className="w-6 h-6 animate-pulse-slow" /> 
+                  : <Bell className="w-6 h-6" />
+                }
+              </div>
+              
+              <div className="flex-1 text-left">
+                {hasUnread ? (
+                  <>
+                    <p className="text-sm font-bold text-amber-900">Novas Mensagens</p>
+                    <p className="text-xs text-amber-700">Você tem {unreadCount} comunicado(s) não lido(s)</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-bold text-slate-700">Caixa de Entrada</p>
+                    <p className="text-xs text-slate-400">Nenhuma nova notificação</p>
+                  </>
+                )}
+              </div>
+
+              <ChevronRight className={`w-5 h-5 ${hasUnread ? 'text-amber-400' : 'text-slate-300'} group-hover:translate-x-1 transition-transform`} />
+            </button>
+          )}
+
+          {/* Grid de Acesso Rápido */}
+          <div className="grid grid-cols-2 gap-4">
+            <button className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md hover:border-blue-100 transition-all text-left group">
+              <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">Agendamentos</p>
+                <p className="text-[10px] text-slate-400 font-medium">Consultas e Exames</p>
+              </div>
+            </button>
+            
+            <button className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md hover:border-rose-100 transition-all text-left group">
+              <div className="bg-rose-50 p-2.5 rounded-xl text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                <Activity className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">Medicamentos</p>
+                <p className="text-[10px] text-slate-400 font-medium">Farmácia Básica</p>
+              </div>
+            </button>
+          </div>
         </section>
 
         {/* 5. Grid Geral de Serviços */}

@@ -7,7 +7,9 @@ import {
   Trash2, 
   Bus,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Briefcase,   // Ícone para Empreendedor
+  ScrollText   // Ícone para Carta de Serviços
 } from 'lucide-react';
 
 interface ServiceItemProps {
@@ -60,12 +62,12 @@ interface ServiceGridProps {
 
 export const ServiceGrid: React.FC<ServiceGridProps> = React.memo(({ onServiceClick }) => {
   const services = [
+    { label: "Sala Empreendedor", icon: Briefcase, color: "text-blue-600", gradient: "bg-gradient-to-br from-blue-500 to-cyan-500" },
+    { label: "Carta de Serviços", icon: ScrollText, color: "text-purple-500", gradient: "bg-gradient-to-br from-purple-500 to-pink-500" },
     { label: "Saúde", icon: HeartPulse, color: "text-rose-500", gradient: "bg-gradient-to-br from-rose-500 to-rose-600" },
     { label: "Educação", icon: GraduationCap, color: "text-blue-500", gradient: "bg-gradient-to-br from-blue-500 to-blue-600" },
-    { label: "IPTU", icon: Building2, color: "text-emerald-500", gradient: "bg-gradient-to-br from-emerald-500 to-emerald-600" },
     { label: "Transporte", icon: Bus, color: "text-indigo-500", gradient: "bg-gradient-to-br from-indigo-500 to-indigo-600" },
     { label: "Ouvidoria", icon: MessageSquare, color: "text-orange-500", gradient: "bg-gradient-to-br from-orange-500 to-orange-600" },
-    { label: "Limpeza", icon: Trash2, color: "text-green-600", gradient: "bg-gradient-to-br from-green-500 to-green-700" },
     { label: "Certidões", icon: FileText, color: "text-slate-500", gradient: "bg-gradient-to-br from-slate-400 to-slate-600" },
     { label: "Defesa Civil", icon: AlertTriangle, color: "text-amber-500", gradient: "bg-gradient-to-br from-amber-400 to-amber-600" },
   ];

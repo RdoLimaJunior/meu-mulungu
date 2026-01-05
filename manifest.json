@@ -1,0 +1,21 @@
+{
+  "name": "Meu Mulungu",
+  "short_name": "Mulungu App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#009639",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://www.mulungu.ce.gov.br/imagens/logo.png?time=1767516382",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://www.mulungu.ce.gov.br/imagens/logo.png?time=1767516382",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

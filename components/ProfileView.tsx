@@ -48,8 +48,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ citizen, onBack }) => 
       <div className="p-5 space-y-6 overflow-y-auto">
         {/* Profile Header */}
         <div className="flex flex-col items-center justify-center py-4">
-          <div className="w-20 h-20 bg-mulungu-100 rounded-full flex items-center justify-center text-mulungu-600 mb-3 shadow-inner transform transition-transform hover:scale-105 duration-300">
-            <User className="w-10 h-10" />
+          <div className="w-28 h-28 bg-mulungu-100 rounded-full flex items-center justify-center text-mulungu-600 mb-3 shadow-inner transform transition-transform hover:scale-105 duration-300 border-4 border-white overflow-hidden ring-2 ring-slate-100">
+             {citizen.photo ? (
+                <img src={citizen.photo} alt="Foto de Perfil" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-12 h-12" />
+              )}
           </div>
           <h2 className="text-xl font-bold text-slate-900 text-center">{citizen.fullName}</h2>
           <p className="text-sm text-slate-500">Cidadão de Mulungu</p>

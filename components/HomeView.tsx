@@ -1,9 +1,9 @@
 import React from 'react';
-import { GreetingHeader } from './GreetingHeader';
+import { DynamicHero } from './DynamicHero';
 import { NewsCarousel } from './NewsCarousel';
 import { ServiceGrid } from './ServiceGrid';
 import { LogIn, Fingerprint, ChevronRight } from 'lucide-react';
-import { Button } from './ui/Forms';
+import { PwaInstaller } from './PwaInstaller';
 
 interface HomeViewProps {
   onInteract: () => void;
@@ -13,8 +13,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
   return (
     <div className="flex flex-col h-full animate-fade-in bg-slate-50 pb-12">
       
-      {/* 1. Header Atmosférico */}
-      <GreetingHeader user={null} />
+      {/* TRIGGER PWA BANNER NA HOME */}
+      <PwaInstaller mode="banner" />
+
+      {/* 1. Novo Hero Dinâmico */}
+      <DynamicHero user={null} />
       
       {/* Container de Conteúdo */}
       <div className="px-5 md:px-8 -mt-6 relative z-20 space-y-8">
@@ -35,7 +38,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
           <NewsCarousel />
         </section>
 
-        {/* 3. Acesso Cidadão (Call to Action Principal) */}
+        {/* 3. Mulungu Digital (Call to Action Principal) */}
         <section>
           <div 
             onClick={onInteract}
@@ -48,7 +51,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-mulungu-600 mb-1">
                   <Fingerprint className="w-5 h-5" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Identidade Digital</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Mulungu Digital</span>
                 </div>
                 <h2 className="text-lg font-bold text-slate-800">Acesse sua Carteira</h2>
                 <p className="text-sm text-slate-500 max-w-[220px] leading-tight">

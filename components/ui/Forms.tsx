@@ -10,6 +10,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className = '', mask, onChange, ...props }, ref) => {
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Aplica a máscara se existir e se o usuário não estiver apagando (backspace)
+      // Lógica simples: sempre aplica a máscara no valor atual
       if (mask) {
         e.target.value = mask(e.target.value);
       }
@@ -45,6 +47,56 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }
 );
 Input.displayName = 'Input';
+
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  error?: string;
+  options: { label: string; value: string }[];
+}
+
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  ({ label, error, className = '', options, ...props }, ref) => {
+    const selectId = React.useId();
+
+    return (
+      <div className="w-full mb-4">
+        <label htmlFor={selectId} className="block text-sm font-medium text-slate-700 mb-1">
+          {label}
+        </label>
+        <div className="relative">
+          <select
+            id={selectId}
+            ref={ref}
+            className={`
+              w-full px-3 py-2 bg-white border rounded-md text-sm shadow-sm text-slate-700 appearance-none
+              transition-all duration-200 ease-in-out
+              focus:outline-none focus:border-mulungu-500 focus:ring-1 focus:ring-mulungu-500
+              disabled:bg-slate-50 disabled:text-slate-500
+              ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300'}
+              ${className}
+            `}
+            {...props}
+          >
+            <option value="" disabled>Selecione...</option>
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          {/* Custom Arrow Icon */}
+          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+        </div>
+        {error && <p className="mt-1 text-xs text-red-600 animate-slide-in font-medium">{error}</p>}
+      </div>
+    );
+  }
+);
+Select.displayName = 'Select';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'outline' | 'ghost';

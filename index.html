@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#009639" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Mulungu App" />
+    
     <link rel="icon" href="https://www.mulungu.ce.gov.br/imagens/logo.png?time=1767516382" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Meu Mulungu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -69,6 +75,14 @@
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
       }
+      @keyframes rain {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 40px; }
+      }
+      @keyframes twinkle {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-550px); }
+      }
       
       .animate-fade-in {
         animation: fadeIn 0.5s ease-out forwards;
@@ -115,5 +129,37 @@
 </head>
   <body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-mulungu-100 selection:text-mulungu-900">
     <div id="root" class="min-h-screen flex flex-col"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Criação inline do Service Worker para cache básico
+          const swContent = `
+            const CACHE_NAME = 'mulungu-v1';
+            const urlsToCache = ['/', '/index.html'];
+            
+            self.addEventListener('install', event => {
+              event.waitUntil(
+                caches.open(CACHE_NAME)
+                  .then(cache => cache.addAll(urlsToCache))
+              );
+            });
+
+            self.addEventListener('fetch', event => {
+              event.respondWith(
+                caches.match(event.request)
+                  .then(response => response || fetch(event.request))
+              );
+            });
+          `;
+          
+          const blob = new Blob([swContent], {type: 'application/javascript'});
+          const swUrl = URL.createObjectURL(blob);
+          
+          navigator.serviceWorker.register(swUrl)
+            .then(reg => console.log('SW registrado', reg))
+            .catch(err => console.log('SW falhou', err));
+        });
+      }
+    </script>
   </body>
 </html>
