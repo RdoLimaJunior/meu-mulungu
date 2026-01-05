@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { MobileContainer } from './components/ui/Layouts';
 import { OfficialHeader } from './components/OfficialHeader'; // Novo Header
@@ -24,13 +22,10 @@ export default function App() {
   });
 
   useEffect(() => {
-    // Prevenção de hidratação incorreta: check window
-    if (typeof window !== 'undefined') {
-      const savedUser = localStorage.getItem('mulungu_user_session');
-      if (savedUser) {
-        setAuthState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
-        setView(ViewState.DASHBOARD);
-      }
+    const savedUser = localStorage.getItem('mulungu_user_session');
+    if (savedUser) {
+      setAuthState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
+      setView(ViewState.DASHBOARD);
     }
   }, []);
 
