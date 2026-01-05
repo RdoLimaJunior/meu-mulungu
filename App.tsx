@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MobileContainer } from './components/ui/Layouts';
-import { OfficialHeader } from './components/OfficialHeader'; // Novo Header
-import { OfficialFooter } from './components/OfficialFooter'; // Novo Footer
+import { OfficialHeader } from './components/OfficialHeader'; 
+import { OfficialFooter } from './components/OfficialFooter'; 
 import { HomeView } from './components/HomeView';
 import { LoginView } from './components/LoginView';
 import { RegisterForm } from './components/RegisterForm';
@@ -21,11 +21,25 @@ export default function App() {
     error: null,
   });
 
+  // UX Improvement: Reset scroll on view change
+  const changeView = (newView: ViewState) => {
+    setView(newView);
+    // Pequeno delay para garantir que o render cycle termine antes de rolar
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 10);
+  };
+
   useEffect(() => {
-    const savedUser = localStorage.getItem('mulungu_user_session');
-    if (savedUser) {
-      setAuthState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
-      setView(ViewState.DASHBOARD);
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('mulungu_user_session');
+      if (savedUser) {
+        setAuthState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
+        // Não usamos changeView aqui para evitar scroll desnecessário no load inicial
+        setView(ViewState.DASHBOARD);
+      }
     }
   }, []);
 
@@ -36,7 +50,7 @@ export default function App() {
       setAuthState({ user, isLoading: false, error: null });
       localStorage.setItem('mulungu_user_session', JSON.stringify(user));
       toast.success("Bem-vindo de volta!");
-      setView(ViewState.DASHBOARD); 
+      changeView(ViewState.DASHBOARD); 
     } catch (err: any) {
       setAuthState(prev => ({ ...prev, isLoading: false, error: err.message }));
       toast.error(err.message || "Erro ao entrar");
@@ -50,7 +64,7 @@ export default function App() {
       setAuthState({ user: newUser, isLoading: false, error: null });
       localStorage.setItem('mulungu_user_session', JSON.stringify(newUser));
       toast.success("Cadastro realizado com sucesso!");
-      setView(ViewState.DASHBOARD);
+      changeView(ViewState.DASHBOARD);
     } catch (err: any) {
       setAuthState(prev => ({ ...prev, isLoading: false, error: err.message }));
       toast.error(err.message || "Erro ao cadastrar");
@@ -73,33 +87,33 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('mulungu_user_session');
     setAuthState({ user: null, isLoading: false, error: null });
-    setView(ViewState.PUBLIC_HOME);
+    changeView(ViewState.PUBLIC_HOME);
     toast.dismiss();
     toast.success("Você saiu com segurança.");
   };
 
   const handleServiceInteraction = () => {
     if (authState.user) {
-      setView(ViewState.DASHBOARD);
+      changeView(ViewState.DASHBOARD);
     } else {
       toast("Faça login para acessar este serviço", { icon: '🔒' });
-      setView(ViewState.LOGIN);
+      changeView(ViewState.LOGIN);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-900">
       <Toaster position="top-center" containerStyle={{ top: 80 }} />
       
-      {/* HEADER OFICIAL DO MUNICÍPIO (AGORA COM LOGIN) */}
+      {/* HEADER OFICIAL */}
       <OfficialHeader 
         user={authState.user}
-        onLogin={() => setView(ViewState.LOGIN)}
+        onLogin={() => changeView(ViewState.LOGIN)}
         onLogout={handleLogout}
-        onProfile={() => setView(ViewState.PROFILE_DETAILS)}
+        onProfile={() => changeView(ViewState.PROFILE_DETAILS)}
       />
 
-      {/* CONTAINER DE CONTEÚDO PRINCIPAL */}
+      {/* CONTAINER PRINCIPAL */}
       <MobileContainer>
         
         {view === ViewState.PUBLIC_HOME && (
@@ -109,9 +123,9 @@ export default function App() {
         {view === ViewState.LOGIN && (
           <LoginView 
             onLogin={handleLogin}
-            onRegisterClick={() => setView(ViewState.REGISTER)}
-            onForgotPasswordClick={() => setView(ViewState.FORGOT_PASSWORD)}
-            onBack={() => setView(ViewState.PUBLIC_HOME)}
+            onRegisterClick={() => changeView(ViewState.REGISTER)}
+            onForgotPasswordClick={() => changeView(ViewState.FORGOT_PASSWORD)}
+            onBack={() => changeView(ViewState.PUBLIC_HOME)}
             isLoading={authState.isLoading}
           />
         )}
@@ -120,22 +134,22 @@ export default function App() {
           <DigitalWallet 
             citizen={authState.user} 
             onLogout={handleLogout} 
-            onViewProfile={() => setView(ViewState.PROFILE_DETAILS)}
-            onShowQrCode={() => setView(ViewState.QR_FULLSCREEN)}
+            onViewProfile={() => changeView(ViewState.PROFILE_DETAILS)}
+            onShowQrCode={() => changeView(ViewState.QR_FULLSCREEN)}
           />
         )}
 
         {view === ViewState.PROFILE_DETAILS && authState.user && (
           <ProfileView 
             citizen={authState.user}
-            onBack={() => setView(ViewState.DASHBOARD)}
+            onBack={() => changeView(ViewState.DASHBOARD)}
           />
         )}
 
         {view === ViewState.QR_FULLSCREEN && authState.user && (
           <QrFullscreenView 
             citizen={authState.user}
-            onClose={() => setView(ViewState.DASHBOARD)}
+            onClose={() => changeView(ViewState.DASHBOARD)}
           />
         )}
         
@@ -143,7 +157,7 @@ export default function App() {
           <div className="p-5 flex-1 overflow-y-auto">
             <RegisterForm 
               onSubmit={handleRegister} 
-              onBack={() => setView(ViewState.LOGIN)}
+              onBack={() => changeView(ViewState.LOGIN)}
               isLoading={authState.isLoading}
             />
           </div>
@@ -153,14 +167,14 @@ export default function App() {
           <div className="p-5 flex-1 overflow-y-auto">
             <ForgotPasswordView 
               onSubmit={handleForgotPassword}
-              onBack={() => setView(ViewState.LOGIN)}
+              onBack={() => changeView(ViewState.LOGIN)}
               isLoading={authState.isLoading}
             />
           </div>
         )}
       </MobileContainer>
 
-      {/* FOOTER OFICIAL DO MUNICÍPIO */}
+      {/* FOOTER OFICIAL */}
       <OfficialFooter />
     </div>
   );

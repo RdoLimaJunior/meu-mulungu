@@ -5,20 +5,21 @@ interface ContainerProps {
   className?: string;
 }
 
-// O MobileContainer agora atua como o wrapper de conteúdo central
 export const MobileContainer: React.FC<ContainerProps> = ({ children, className = '' }) => {
   return (
     <main className={`
       w-full flex-1 flex flex-col relative
-      md:max-w-6xl md:mx-auto md:w-full
+      md:max-w-5xl md:mx-auto
       bg-slate-50
+      shadow-none md:shadow-xl md:my-6 md:rounded-2xl md:overflow-hidden md:border md:border-slate-100
       ${className}
     `}>
       {/* 
-         Removido o estilo "card flutuante" (shadow/rounded) em desktop 
-         para integrar melhor com o Header/Footer oficial flat do governo.
+         Ajuste de Performance de Layout:
+         - min-h dinâmico garante que o conteúdo empurre o footer para baixo
+         - Evita "layout shift" ao carregar conteúdo
       */}
-      <div className="flex-1 flex flex-col md:bg-white md:border-x md:border-slate-200/50 min-h-[600px]">
+      <div className="flex-1 flex flex-col min-h-[calc(100vh-250px)] bg-slate-50">
         {children}
       </div>
     </main>

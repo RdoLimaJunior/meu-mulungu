@@ -99,12 +99,14 @@ export const ContextService = {
       // Sanitização do nome da cidade
       let cityName = data.name;
       
-      // Se for a requisição oficial de Mulungu, força o nome correto
+      // Se for a requisição oficial de Mulungu, força o nome correto com Estado
       if (isMulunguRequest) {
-        cityName = "Mulungu";
+        cityName = "Mulungu - CE";
       } else {
-        // Correções comuns para a região se necessário
-        if (cityName === "Brejinho" || cityName === "Brejo") cityName = "Mulungu (Arredores)";
+        // Se a API retornar nomes de bairros ou distritos próximos, normalizamos
+        if (cityName === "Brejinho" || cityName === "Brejo" || cityName === "Guaramiranga") {
+           cityName = "Mulungu (Arredores)";
+        }
       }
 
       const weatherData = {
@@ -136,7 +138,7 @@ export const ContextService = {
         description: 'parcialmente nublado', 
         main: 'clouds', 
         icon: '02d', 
-        city: 'Mulungu', 
+        city: 'Mulungu - CE', 
         isLocal: false,
         wind: 15,
         humidity: 65

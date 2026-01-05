@@ -296,24 +296,25 @@ export const GreetingHeader: React.FC<GreetingHeaderProps> = ({ user }) => {
       {/* --- LAYER 3: CONTENT --- */}
       <div className="relative h-full flex flex-col justify-between p-5 md:p-6 z-10 text-white">
         
-        {/* Top: Location Selector */}
+        {/* Top: Location Selector (Nome da Cidade agora tem destaque oficial) */}
         <div className="flex justify-between items-start">
           <button 
             onClick={toggleWeather}
             disabled={!canToggle}
             className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all duration-300
+              flex items-center gap-1.5 px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-300
               ${canToggle 
                 ? 'bg-black/10 border-white/20 hover:bg-black/20 cursor-pointer' 
-                : 'bg-transparent border-transparent cursor-default pl-0'}
+                : 'bg-white/10 border-white/10 cursor-default pl-3'}
             `}
           >
-            <MapPin className="w-3.5 h-3.5 text-white/90" />
-            <span className="text-[10px] sm:text-xs font-bold tracking-wide uppercase truncate max-w-[140px] drop-shadow-md">
-              {displayWeather ? displayWeather.city : 'Carregando...'}
+            <MapPin className="w-4 h-4 text-white drop-shadow-sm" />
+            {/* Ajuste aqui: Texto Maior, Uppercase, Fallback Imediato */}
+            <span className="text-xs sm:text-sm font-black tracking-widest uppercase truncate max-w-[180px] drop-shadow-md">
+              {displayWeather ? displayWeather.city : 'MULUNGU - CE'}
             </span>
             {canToggle && (
-              <RefreshCcw className="w-3 h-3 text-white/80 ml-1" />
+              <RefreshCcw className="w-3.5 h-3.5 text-white/80 ml-1" />
             )}
           </button>
         </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { GreetingHeader } from './GreetingHeader';
 import { NewsCarousel } from './NewsCarousel';
 import { ServiceGrid } from './ServiceGrid';
-import { LogIn, Fingerprint } from 'lucide-react';
+import { LogIn, Fingerprint, ChevronRight } from 'lucide-react';
 import { Button } from './ui/Forms';
 
 interface HomeViewProps {
@@ -11,85 +11,71 @@ interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
   return (
-    // Removido padding global (p-5) para permitir que o Header toque as bordas
-    <div className="flex flex-col h-full animate-fade-in overflow-y-auto pb-24 bg-slate-50">
+    <div className="flex flex-col h-full animate-fade-in bg-slate-50 pb-12">
       
-      {/* 1. Header Full Width (Sem botões de login) */}
+      {/* 1. Header Atmosférico */}
       <GreetingHeader user={null} />
       
-      {/* Container para o conteúdo com espaçamento lateral */}
+      {/* Container de Conteúdo */}
       <div className="px-5 md:px-8 -mt-6 relative z-20 space-y-8">
         
-        {/* Logo Institucional (Floating Badge) */}
-        <div className="flex flex-col items-center justify-center mb-4">
-          <div className="bg-white p-3 rounded-full shadow-lg border border-slate-100">
+        {/* Logo Institucional Flutuante */}
+        <div className="flex flex-col items-center justify-center">
+          <div className="bg-white p-3 rounded-full shadow-lg border border-slate-100 transform transition-transform hover:scale-105 duration-300">
              <img 
                src="https://www.mulungu.ce.gov.br/imagens/logo.png?time=1767516382" 
                alt="Brasão Oficial de Mulungu" 
                className="h-14 w-auto object-contain"
              />
           </div>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-2">
-            Governo Municipal
-          </p>
         </div>
 
-        {/* 2. Banner Rotativo de Notícias */}
+        {/* 2. Banner de Notícias */}
         <section className="-mx-2 sm:mx-0">
           <NewsCarousel />
         </section>
 
-        {/* 3. Grid de Serviços */}
+        {/* 3. Acesso Cidadão (Call to Action Principal) */}
         <section>
-          <ServiceGrid onServiceClick={onInteract} />
-        </section>
-
-        {/* 4. Call to Action: Login */}
-        <section className="space-y-4 pb-8">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Minha Carteira</h3>
-          </div>
-
           <div 
             onClick={onInteract}
-            className="relative overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 shadow-sm cursor-pointer group hover:shadow-md transition-all"
+            className="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm cursor-pointer group hover:shadow-lg hover:border-mulungu-200 transition-all duration-300"
           >
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
+            {/* Barra lateral de destaque */}
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-mulungu-500"></div>
+            
+            <div className="p-5 flex items-center justify-between">
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-mulungu-600 mb-1">
                   <Fingerprint className="w-5 h-5" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Acesso Restrito</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Identidade Digital</span>
                 </div>
-                <h2 className="text-lg font-bold text-slate-800">Acesse sua Identidade</h2>
-                <p className="text-sm text-slate-500 max-w-[200px]">
-                  Faça login para visualizar seu QR Code, documentos e histórico.
+                <h2 className="text-lg font-bold text-slate-800">Acesse sua Carteira</h2>
+                <p className="text-sm text-slate-500 max-w-[220px] leading-tight">
+                  Documentos, QR Code e histórico de atendimentos em um só lugar.
                 </p>
               </div>
               
-              <div className="bg-mulungu-50 p-3 rounded-full group-hover:bg-mulungu-100 transition-colors">
-                <LogIn className="w-6 h-6 text-mulungu-600" />
+              <div className="bg-mulungu-50 p-3 rounded-full group-hover:bg-mulungu-600 group-hover:text-white transition-all duration-300 text-mulungu-600 shadow-sm">
+                <LogIn className="w-6 h-6" />
               </div>
             </div>
-
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <Button 
-                variant="primary" 
-                className="w-full text-xs h-auto py-2.5 shadow-none"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onInteract();
-                }}
-              >
-                Entrar agora
-              </Button>
+            
+            {/* Botão Inferior Integrado */}
+            <div className="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-between items-center group-hover:bg-mulungu-50/50 transition-colors">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Acesso Gov.br</span>
+              <span className="text-xs font-bold text-mulungu-700 flex items-center gap-1 group-hover:underline">
+                Entrar agora <ChevronRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
         </section>
 
-        {/* Footer Infos */}
-        <div className="text-center opacity-50 pb-4">
-          <p className="text-[10px] text-slate-400">Prefeitura Municipal de Mulungu &copy; 2024</p>
-        </div>
+        {/* 4. Grid de Serviços */}
+        <section className="pb-4">
+          <ServiceGrid onServiceClick={onInteract} />
+        </section>
+
       </div>
     </div>
   );
