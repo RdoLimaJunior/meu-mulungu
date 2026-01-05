@@ -3,6 +3,7 @@ import { z } from 'zod';
 // --- Domain Enums ---
 
 export enum ViewState {
+  PUBLIC_HOME = 'PUBLIC_HOME', // Nova tela inicial pública
   LOGIN = 'LOGIN',
   REGISTER = 'REGISTER',
   DASHBOARD = 'DASHBOARD',

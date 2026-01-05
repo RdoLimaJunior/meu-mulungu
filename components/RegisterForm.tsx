@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CitizenSchema, CitizenFormData } from '../types';
 import { Input, Button } from './ui/Forms';
 import { ChevronRight, ArrowLeft, Camera, User } from 'lucide-react';
+import { Formatters } from '../services/citizenService';
 
 interface RegisterFormProps {
   onSubmit: (data: CitizenFormData) => Promise<void>;
@@ -23,37 +24,37 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
   });
 
   return (
-    <div className="space-y-6 animate-slide-in max-w-2xl mx-auto">
+    <div className="space-y-6 animate-slide-in max-w-2xl mx-auto pb-8">
       <div className="flex items-center mb-4">
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-mulungu-blue transition-colors">
+        <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-mulungu-blue transition-colors rounded-full hover:bg-slate-100">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h2 className="text-xl font-bold text-mulungu-blue ml-2">Novo Cadastro</h2>
       </div>
 
-      <p className="text-sm text-slate-600 mb-6 bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800">
+      <p className="text-sm text-slate-600 mb-6 bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-900 leading-relaxed">
         Preencha os dados com atenção. Este será seu cadastro único para Saúde e Educação.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Photo Upload Section */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative group cursor-pointer transition-transform active:scale-95">
-            <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center border-2 border-slate-200 text-slate-400 overflow-hidden group-hover:border-mulungu-300 transition-colors">
+            <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center border-2 border-slate-200 text-slate-400 overflow-hidden group-hover:border-mulungu-300 transition-colors shadow-inner">
               <User className="w-12 h-12" />
             </div>
-            <button type="button" className="absolute bottom-0 right-0 bg-mulungu-600 text-white p-2 rounded-full shadow-lg border-2 border-white hover:bg-mulungu-700 transition-colors">
+            <button type="button" className="absolute bottom-0 right-0 bg-mulungu-600 text-white p-2.5 rounded-full shadow-lg border-2 border-white hover:bg-mulungu-700 transition-colors">
               <Camera className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs text-slate-400 mt-2">Toque para adicionar foto</p>
+          <p className="text-xs text-slate-400 mt-2 font-medium">Toque para adicionar foto</p>
         </div>
 
         {/* Personal Info */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-mulungu-blue uppercase tracking-wider border-b pb-1">Dados Pessoais</h3>
+          <h3 className="text-sm font-bold text-mulungu-blue uppercase tracking-wider border-b border-slate-100 pb-2">Dados Pessoais</h3>
           
-          <div className="md:grid md:grid-cols-2 md:gap-4">
+          <div className="md:grid md:grid-cols-2 md:gap-5 space-y-4 md:space-y-0">
             <div className="md:col-span-2">
               <Input 
                 label="Nome Completo" 
@@ -64,10 +65,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
             </div>
             
             <Input 
-              label="CPF (apenas números)" 
+              label="CPF" 
               placeholder="000.000.000-00"
-              maxLength={11}
+              maxLength={14}
               inputMode="numeric"
+              mask={Formatters.cpf}
               error={errors.cpf?.message} 
               {...register('cpf')} 
             />
@@ -81,9 +83,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
 
             <Input 
               label="Celular" 
-              placeholder="85999999999"
+              placeholder="(85) 99999-9999"
               inputMode="tel"
-              maxLength={11}
+              maxLength={15}
+              mask={Formatters.phone}
               error={errors.phoneNumber?.message} 
               {...register('phoneNumber')} 
             />
@@ -92,6 +95,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
               label="Cartão SUS (Opcional)" 
               placeholder="000 0000 0000 0000"
               inputMode="numeric"
+              maxLength={18}
+              mask={Formatters.sus}
               error={errors.susCard?.message} 
               {...register('susCard')} 
             />
@@ -108,15 +113,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
         </div>
 
         {/* Address Info */}
-        <div className="space-y-4 mt-6">
-          <h3 className="text-sm font-semibold text-mulungu-blue uppercase tracking-wider border-b pb-1">Endereço</h3>
+        <div className="space-y-4 mt-8">
+          <h3 className="text-sm font-bold text-mulungu-blue uppercase tracking-wider border-b border-slate-100 pb-2">Endereço</h3>
           
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-3 gap-3 md:gap-5">
              <div className="col-span-1">
                 <Input 
                   label="CEP" 
                   placeholder="00000-000"
                   inputMode="numeric"
+                  maxLength={9}
+                  mask={Formatters.cep}
                   error={errors.address?.cep?.message} 
                   {...register('address.cep')} 
                 />
@@ -131,7 +138,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
              </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-4 gap-3 md:gap-5">
             <div className="col-span-3">
               <Input 
                 label="Rua" 
@@ -151,8 +158,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onBack, is
           </div>
         </div>
 
-        <div className="pt-4 pb-8">
-          <Button type="submit" isLoading={isLoading} className="shadow-lg shadow-mulungu-200 group w-full md:w-auto md:px-8">
+        <div className="pt-6">
+          <Button type="submit" isLoading={isLoading} className="shadow-lg shadow-mulungu-200 group w-full md:w-auto md:min-w-[200px] md:float-right">
             Finalizar Cadastro <ChevronRight className="w-4 h-4 inline ml-1 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

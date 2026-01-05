@@ -1,6 +1,11 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { MobileContainer, Header } from './components/ui/Layouts';
+import { MobileContainer } from './components/ui/Layouts';
+import { OfficialHeader } from './components/OfficialHeader'; // Novo Header
+import { OfficialFooter } from './components/OfficialFooter'; // Novo Footer
 import { HomeView } from './components/HomeView';
+import { LoginView } from './components/LoginView';
 import { RegisterForm } from './components/RegisterForm';
 import { DigitalWallet } from './components/DigitalWallet';
 import { ForgotPasswordView } from './components/ForgotPasswordView';
@@ -9,23 +14,23 @@ import { QrFullscreenView } from './components/QrFullscreenView';
 import { CitizenService } from './services/citizenService';
 import { ViewState, AuthState, LoginFormData, CitizenFormData } from './types';
 import { Toaster, toast } from 'react-hot-toast';
-import { LogOut, User } from 'lucide-react';
 
 export default function App() {
-  // ViewState.LOGIN is now conceptually "HOME" (Guest or Logged In)
-  const [view, setView] = useState<ViewState>(ViewState.LOGIN);
+  const [view, setView] = useState<ViewState>(ViewState.PUBLIC_HOME);
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isLoading: false,
     error: null,
   });
 
-  // Check for existing session (mock)
   useEffect(() => {
-    const savedUser = localStorage.getItem('mulungu_user_session');
-    if (savedUser) {
-      setAuthState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
-      setView(ViewState.DASHBOARD);
+    // Prevenção de hidratação incorreta: check window
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('mulungu_user_session');
+      if (savedUser) {
+        setAuthState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
+        setView(ViewState.DASHBOARD);
+      }
     }
   }, []);
 
@@ -36,7 +41,7 @@ export default function App() {
       setAuthState({ user, isLoading: false, error: null });
       localStorage.setItem('mulungu_user_session', JSON.stringify(user));
       toast.success("Bem-vindo de volta!");
-      setView(ViewState.DASHBOARD); // Redirect to Dashboard on Login
+      setView(ViewState.DASHBOARD); 
     } catch (err: any) {
       setAuthState(prev => ({ ...prev, isLoading: false, error: err.message }));
       toast.error(err.message || "Erro ao entrar");
@@ -50,7 +55,7 @@ export default function App() {
       setAuthState({ user: newUser, isLoading: false, error: null });
       localStorage.setItem('mulungu_user_session', JSON.stringify(newUser));
       toast.success("Cadastro realizado com sucesso!");
-      setView(ViewState.DASHBOARD); // Redirect to Dashboard on Register
+      setView(ViewState.DASHBOARD);
     } catch (err: any) {
       setAuthState(prev => ({ ...prev, isLoading: false, error: err.message }));
       toast.error(err.message || "Erro ao cadastrar");
@@ -73,73 +78,49 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('mulungu_user_session');
     setAuthState({ user: null, isLoading: false, error: null });
-    setView(ViewState.LOGIN); // Go back to Home (Guest)
+    setView(ViewState.PUBLIC_HOME);
     toast.dismiss();
+    toast.success("Você saiu com segurança.");
   };
 
-  // Header Logic for Logged In Users
-  const renderHeaderRight = () => {
-    if (authState.user && (view === ViewState.DASHBOARD || view === ViewState.PROFILE_DETAILS)) {
-      return (
-        <>
-          <button 
-            onClick={() => setView(ViewState.PROFILE_DETAILS)}
-            className="flex items-center gap-2 hover:bg-slate-50 p-1 pr-2 rounded-full transition-colors border border-transparent hover:border-slate-100"
-          >
-            <div className="w-8 h-8 bg-mulungu-100 rounded-full flex items-center justify-center text-mulungu-700 border border-mulungu-200">
-               <User className="w-4 h-4" />
-            </div>
-            <div className="hidden sm:block text-right">
-              <p className="text-xs font-bold text-slate-700 leading-none">{authState.user.fullName.split(' ')[0]}</p>
-              <p className="text-[9px] text-slate-400 font-medium">Cidadão</p>
-            </div>
-          </button>
-          <button 
-            onClick={handleLogout}
-            className="p-2 text-slate-400 hover:text-red-600 transition-colors"
-            title="Sair"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </>
-      );
+  const handleServiceInteraction = () => {
+    if (authState.user) {
+      setView(ViewState.DASHBOARD);
+    } else {
+      toast("Faça login para acessar este serviço", { icon: '🔒' });
+      setView(ViewState.LOGIN);
     }
-    return null;
-  };
-
-  const getHeaderTitle = () => {
-     switch (view) {
-        case ViewState.REGISTER: return "Cadastro";
-        case ViewState.FORGOT_PASSWORD: return "Recuperação";
-        case ViewState.PROFILE_DETAILS: return "Perfil do Cidadão";
-        default: return "Meu Mulungu";
-     }
   };
 
   return (
-    // Background color for the "desktop body"
-    <div className="min-h-screen bg-slate-100 md:py-8 font-sans">
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+      <Toaster position="top-center" containerStyle={{ top: 80 }} />
+      
+      {/* HEADER OFICIAL DO MUNICÍPIO (AGORA COM LOGIN) */}
+      <OfficialHeader 
+        user={authState.user}
+        onLogin={() => setView(ViewState.LOGIN)}
+        onLogout={handleLogout}
+        onProfile={() => setView(ViewState.PROFILE_DETAILS)}
+      />
+
+      {/* CONTAINER DE CONTEÚDO PRINCIPAL */}
       <MobileContainer>
-        <Toaster position="top-center" containerStyle={{ top: 40 }} />
         
-        {/* Header Logic: Show simple header on internal pages, Login View has its own structure */}
-        {view !== ViewState.LOGIN && view !== ViewState.QR_FULLSCREEN && (
-           <Header title={getHeaderTitle()} rightContent={renderHeaderRight()} />
+        {view === ViewState.PUBLIC_HOME && (
+          <HomeView onInteract={handleServiceInteraction} />
         )}
 
-        {/* Home / Login Landing View */}
         {view === ViewState.LOGIN && (
-          <HomeView 
-            user={authState.user}
+          <LoginView 
             onLogin={handleLogin}
             onRegisterClick={() => setView(ViewState.REGISTER)}
             onForgotPasswordClick={() => setView(ViewState.FORGOT_PASSWORD)}
-            onOpenWallet={() => setView(ViewState.DASHBOARD)}
+            onBack={() => setView(ViewState.PUBLIC_HOME)}
             isLoading={authState.isLoading}
           />
         )}
 
-        {/* Dashboard View (Carteira) */}
         {view === ViewState.DASHBOARD && authState.user && (
           <DigitalWallet 
             citizen={authState.user} 
@@ -149,7 +130,6 @@ export default function App() {
           />
         )}
 
-        {/* Profile Details View */}
         {view === ViewState.PROFILE_DETAILS && authState.user && (
           <ProfileView 
             citizen={authState.user}
@@ -157,7 +137,6 @@ export default function App() {
           />
         )}
 
-        {/* QR Fullscreen View */}
         {view === ViewState.QR_FULLSCREEN && authState.user && (
           <QrFullscreenView 
             citizen={authState.user}
@@ -165,7 +144,6 @@ export default function App() {
           />
         )}
         
-        {/* Registration */}
         {view === ViewState.REGISTER && (
           <div className="p-5 flex-1 overflow-y-auto">
             <RegisterForm 
@@ -176,7 +154,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Forgot Password */}
         {view === ViewState.FORGOT_PASSWORD && (
           <div className="p-5 flex-1 overflow-y-auto">
             <ForgotPasswordView 
@@ -187,6 +164,9 @@ export default function App() {
           </div>
         )}
       </MobileContainer>
+
+      {/* FOOTER OFICIAL DO MUNICÍPIO */}
+      <OfficialFooter />
     </div>
   );
 }

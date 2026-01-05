@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginSchema, LoginFormData } from '../types';
 import { Input, Button } from './ui/Forms';
 import { Fingerprint } from 'lucide-react';
+import { Formatters } from '../services/citizenService';
 
 interface AuthViewProps {
   onLogin: (data: LoginFormData) => Promise<void>;
@@ -41,7 +42,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, onRegisterClick, on
       <div className="flex-1 px-8 pb-8">
         <form onSubmit={handleSubmit(onLogin)} className="space-y-4">
           <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-mulungu-600 transition-colors">
+            <div className="absolute top-9 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-mulungu-600 transition-colors">
               <Fingerprint className="h-5 w-5" />
             </div>
             <Input 
@@ -49,6 +50,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, onRegisterClick, on
               placeholder="000.000.000-00" 
               className="pl-10"
               inputMode="numeric"
+              maxLength={14}
+              mask={Formatters.cpf}
               error={errors.cpf?.message} 
               {...register('cpf')} 
             />
@@ -66,7 +69,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, onRegisterClick, on
              <button 
                type="button"
                onClick={onForgotPasswordClick}
-               className="text-xs text-mulungu-blue hover:underline focus:outline-none"
+               className="text-xs font-semibold text-mulungu-blue hover:text-mulungu-800 hover:underline focus:outline-none p-1"
              >
                Esqueceu a senha?
              </button>
@@ -82,8 +85,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, onRegisterClick, on
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-slate-100" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-400">Primeiro acesso?</span>
+            <div className="relative flex justify-center text-xs uppercase tracking-wide">
+              <span className="bg-white px-2 text-slate-400 font-medium">Primeiro acesso?</span>
             </div>
           </div>
           

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ForgotPasswordSchema, ForgotPasswordFormData } from '../types';
 import { Input, Button } from './ui/Forms';
 import { ArrowLeft, CheckCircle, MessageSquare } from 'lucide-react';
+import { Formatters } from '../services/citizenService';
 
 interface ForgotPasswordViewProps {
   onSubmit: (cpf: string) => Promise<string | null>; // Returns phone number if success
@@ -71,7 +72,8 @@ export const ForgotPasswordView: React.FC<ForgotPasswordViewProps> = ({ onSubmit
           label="CPF" 
           placeholder="000.000.000-00"
           inputMode="numeric"
-          maxLength={11}
+          maxLength={14}
+          mask={Formatters.cpf}
           error={errors.cpf?.message} 
           {...register('cpf')} 
         />

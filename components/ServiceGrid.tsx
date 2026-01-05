@@ -6,90 +6,100 @@ import {
   MessageSquare, 
   Trash2, 
   Bus,
-  ChevronRight 
+  FileText,
+  AlertTriangle
 } from 'lucide-react';
 
 interface ServiceItemProps {
   icon: React.ElementType;
   label: string;
   colorClass: string;
-  bgClass: string;
+  gradientClass: string;
   onClick?: () => void;
+  delay?: number;
 }
 
-const ServiceItem: React.FC<ServiceItemProps> = ({ icon: Icon, label, colorClass, bgClass, onClick }) => (
+const ServiceItem: React.FC<ServiceItemProps> = ({ icon: Icon, label, colorClass, gradientClass, onClick, delay = 0 }) => (
   <button 
     onClick={onClick}
-    className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-sm border border-slate-100 gap-3 transition-all duration-200 hover:shadow-md hover:border-mulungu-200 hover:-translate-y-1 active:scale-95 group"
+    className="group flex flex-col items-center gap-3 p-2 w-full focus:outline-none perspective-1000"
+    style={{ animationDelay: `${delay}ms` }}
   >
-    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${bgClass} ${colorClass} group-hover:scale-110 transition-transform`}>
-      <Icon className="w-6 h-6" />
+    <div className={`
+      relative w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] flex items-center justify-center 
+      shadow-sm transition-all duration-300 ease-out
+      bg-white border border-slate-100 overflow-hidden
+      group-hover:scale-105 group-hover:-translate-y-2 group-hover:shadow-xl group-hover:shadow-slate-200/60
+      group-active:scale-95 group-active:translate-y-0
+    `}>
+      {/* 
+         BACKGROUND GRADIENT:
+         Começa invisível (opacity-0) e aparece sutilmente (opacity-15) no hover.
+         Isso tinge o fundo branco com a cor do serviço.
+      */}
+      <div className={`absolute inset-0 opacity-0 group-hover:opacity-15 transition-opacity duration-300 ${gradientClass}`} />
+      
+      {/* 
+         ICON:
+         Começa em escala de cinza (grayscale) e com opacidade reduzida.
+         No hover, ganha cor total, opacidade total e rotaciona levemente.
+      */}
+      <Icon className={`
+        w-7 h-7 sm:w-8 sm:h-8 ${colorClass} 
+        filter grayscale opacity-60
+        transition-all duration-300 ease-spring
+        group-hover:grayscale-0 group-hover:opacity-100
+        group-hover:rotate-6 group-hover:scale-110
+        relative z-10
+      `} />
+      
+      {/* Brilho extra no topo (Glass effect) */}
+      <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/60 to-transparent opacity-50" />
     </div>
-    <span className="text-xs font-semibold text-slate-600 text-center leading-tight group-hover:text-mulungu-700">
+    
+    <span className="text-[11px] sm:text-xs font-bold text-slate-500 text-center leading-tight group-hover:text-mulungu-700 transition-colors duration-300">
       {label}
     </span>
   </button>
 );
 
-export const ServiceGrid: React.FC = () => {
+interface ServiceGridProps {
+  onServiceClick?: (serviceName: string) => void;
+}
+
+export const ServiceGrid: React.FC<ServiceGridProps> = React.memo(({ onServiceClick }) => {
   const services = [
-    { 
-      label: "Saúde / SUS", 
-      icon: HeartPulse, 
-      color: "text-red-600", 
-      bg: "bg-red-50" 
-    },
-    { 
-      label: "Educação", 
-      icon: GraduationCap, 
-      color: "text-blue-600", 
-      bg: "bg-blue-50" 
-    },
-    { 
-      label: "IPTU / Tributos", 
-      icon: Building2, 
-      color: "text-mulungu-600", 
-      bg: "bg-mulungu-50" 
-    },
-    { 
-      label: "Ouvidoria", 
-      icon: MessageSquare, 
-      color: "text-orange-600", 
-      bg: "bg-orange-50" 
-    },
-    { 
-      label: "Coleta de Lixo", 
-      icon: Trash2, 
-      color: "text-green-700", 
-      bg: "bg-green-50" 
-    },
-    { 
-      label: "Transporte", 
-      icon: Bus, 
-      color: "text-purple-600", 
-      bg: "bg-purple-50" 
-    },
+    { label: "Saúde", icon: HeartPulse, color: "text-rose-500", gradient: "bg-gradient-to-br from-rose-500 to-rose-600" },
+    { label: "Educação", icon: GraduationCap, color: "text-blue-500", gradient: "bg-gradient-to-br from-blue-500 to-blue-600" },
+    { label: "IPTU", icon: Building2, color: "text-emerald-500", gradient: "bg-gradient-to-br from-emerald-500 to-emerald-600" },
+    { label: "Transporte", icon: Bus, color: "text-indigo-500", gradient: "bg-gradient-to-br from-indigo-500 to-indigo-600" },
+    { label: "Ouvidoria", icon: MessageSquare, color: "text-orange-500", gradient: "bg-gradient-to-br from-orange-500 to-orange-600" },
+    { label: "Coleta", icon: Trash2, color: "text-green-600", gradient: "bg-gradient-to-br from-green-500 to-green-700" },
+    { label: "Certidões", icon: FileText, color: "text-slate-500", gradient: "bg-gradient-to-br from-slate-400 to-slate-600" },
+    { label: "Defesa Civil", icon: AlertTriangle, color: "text-amber-500", gradient: "bg-gradient-to-br from-amber-400 to-amber-600" },
   ];
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Serviços Municipais</h3>
-        <button className="text-xs text-mulungu-600 font-medium flex items-center hover:underline">
-          Ver todos <ChevronRight className="w-3 h-3 ml-0.5" />
-        </button>
+    <div className="space-y-4 animate-slide-in">
+      <div className="flex items-center justify-between px-2">
+        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide">Serviços Rápidos</h3>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      
+      <div className="grid grid-cols-4 gap-y-6 gap-x-2 sm:gap-x-6 p-2">
         {services.map((service, index) => (
           <ServiceItem 
             key={index}
             icon={service.icon}
             label={service.label}
             colorClass={service.color}
-            bgClass={service.bg}
+            gradientClass={service.gradient}
+            delay={index * 50}
+            onClick={() => onServiceClick && onServiceClick(service.label)}
           />
         ))}
       </div>
     </div>
   );
-};
+});
+
+ServiceGrid.displayName = 'ServiceGrid';
