@@ -97,18 +97,21 @@ export default function App() {
   };
 
   const handleServiceInteraction = (serviceName?: string) => {
+    if (!serviceName) return;
+
     // 1. Serviços Públicos (Abrem WebView sem login)
-    if (serviceName === "Sala Empreendedor") {
+    // Usamos includes ou trim para evitar erros com espaços
+    const cleanName = serviceName.trim();
+
+    if (cleanName === "Sala Empreendedor") {
       setWebViewConfig({
         url: 'https://empreendedor.mulungu.ce.gov.br/',
         title: 'Sala do Empreendedor'
       });
-      // Importante: Não mudamos a ViewState principal para não perder o contexto (Dashboard ou Home),
-      // apenas setamos a config do WebView que será renderizado por cima.
       return; 
     }
 
-    if (serviceName === "Carta de Serviços") {
+    if (cleanName === "Carta de Serviços") {
       setWebViewConfig({
         url: 'https://www.mulungu.ce.gov.br/cartaservicos.php',
         title: 'Carta de Serviços'
@@ -118,6 +121,11 @@ export default function App() {
 
     // 2. Serviços Privados (Requerem Login)
     if (authState.user) {
+      // Já está logado. Se for um serviço sem WebView específico, apenas mantemos no dashboard por enquanto.
+      // Futuramente, adicionar lógica para Saúde, Educação, etc.
+      if (cleanName === "Saúde" || cleanName === "Educação") {
+        toast.success(`Serviço de ${cleanName} em breve!`);
+      }
       changeView(ViewState.DASHBOARD);
     } else {
       toast("Faça login para acessar este serviço", { icon: '🔒' });
@@ -127,7 +135,6 @@ export default function App() {
 
   const handleCloseWebView = () => {
     setWebViewConfig(null);
-    // Não precisamos mudar o viewState pois ele é um overlay agora
   };
 
   return (
@@ -165,6 +172,7 @@ export default function App() {
             onLogout={handleLogout} 
             onViewProfile={() => changeView(ViewState.PROFILE_DETAILS)}
             onShowQrCode={() => changeView(ViewState.QR_FULLSCREEN)}
+            onInteract={handleServiceInteraction} // Garante que a função é passada aqui
           />
         )}
 

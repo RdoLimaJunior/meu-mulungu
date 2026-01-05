@@ -6,7 +6,7 @@ import { LogIn, Fingerprint, ChevronRight } from 'lucide-react';
 import { PwaInstaller } from './PwaInstaller';
 
 interface HomeViewProps {
-  onInteract: () => void;
+  onInteract: (serviceName: string) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
@@ -16,23 +16,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
       {/* TRIGGER PWA BANNER NA HOME */}
       <PwaInstaller mode="banner" />
 
-      {/* 1. Novo Hero Dinâmico */}
+      {/* 1. Novo Hero Dinâmico (Lógica de timer embutida no componente) */}
       <DynamicHero user={null} />
       
       {/* Container de Conteúdo */}
-      <div className="px-5 md:px-8 -mt-6 relative z-20 space-y-8">
+      <div className="px-5 md:px-8 mt-4 relative z-20 space-y-6">
         
-        {/* Logo Institucional Flutuante */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="bg-white p-3 rounded-full shadow-lg border border-slate-100 transform transition-transform hover:scale-105 duration-300">
-             <img 
-               src="https://www.mulungu.ce.gov.br/imagens/logo.png?time=1767516382" 
-               alt="Brasão Oficial de Mulungu" 
-               className="h-14 w-auto object-contain"
-             />
-          </div>
-        </div>
-
         {/* 2. Banner de Notícias */}
         <section className="-mx-2 sm:mx-0">
           <NewsCarousel />
@@ -41,8 +30,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onInteract }) => {
         {/* 3. Mulungu Digital (Call to Action Principal) */}
         <section>
           <div 
-            onClick={onInteract}
+            onClick={() => onInteract("Carteira Digital")} 
             className="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm cursor-pointer group hover:shadow-lg hover:border-mulungu-200 transition-all duration-300"
+            role="button"
+            tabIndex={0}
           >
             {/* Barra lateral de destaque */}
             <div className="absolute top-0 left-0 w-1.5 h-full bg-mulungu-500"></div>

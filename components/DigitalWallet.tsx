@@ -12,9 +12,10 @@ interface DigitalWalletProps {
   onLogout: () => void;
   onViewProfile?: () => void;
   onShowQrCode?: () => void;
+  onInteract: (serviceName: string) => void;
 }
 
-export const DigitalWallet: React.FC<DigitalWalletProps> = ({ citizen, onLogout, onViewProfile, onShowQrCode }) => {
+export const DigitalWallet: React.FC<DigitalWalletProps> = ({ citizen, onLogout, onViewProfile, onShowQrCode, onInteract }) => {
   
   // Mascarar CPF, exceto se for o usuário de teste que queremos ver claro no dev
   const maskedCpf = citizen.cpf === "123.456.789-00" 
@@ -229,7 +230,8 @@ export const DigitalWallet: React.FC<DigitalWalletProps> = ({ citizen, onLogout,
 
         {/* 5. Grid Geral de Serviços */}
         <section>
-          <ServiceGrid />
+          {/* REPASSA A INTERAÇÃO PARA O GRID */}
+          <ServiceGrid onServiceClick={onInteract} />
         </section>
 
       </div>

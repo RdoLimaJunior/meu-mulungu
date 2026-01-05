@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Citizen } from '../types';
 import { 
-  Loader2, MapPin, Droplets, Wind, RefreshCcw,
-  Sun, Moon, CloudRain, Cloud, CloudLightning, Snowflake, CloudFog, Sunset, ThermometerSun
+  MapPin, Droplets, Wind, RefreshCcw,
+  Sun, Moon, CloudRain, Cloud, CloudLightning, Snowflake, CloudFog, Sunset,
+  Calendar, Clock, AlertCircle, Navigation, ArrowRight, ThermometerSun
 } from 'lucide-react';
 import { ContextService, MULUNGU_COORDS } from '../services/citizenService';
 
@@ -21,19 +22,14 @@ interface WeatherData {
   humidity: number;
 }
 
-// --- TIPOS DA ENGINE DE ATMOSFERA ---
-
-type Season = 'rainy_season' | 'dry_season' | 'windy_season'; // Adaptado para o Ceará
+// --- ATMOSPHERE ENGINE ---
+type Season = 'rainy_season' | 'dry_season' | 'windy_season'; 
 type TimePeriod = 'dawn' | 'morning' | 'noon' | 'afternoon' | 'golden_hour' | 'dusk' | 'night' | 'midnight';
 type WeatherCondition = 'clear' | 'clouds' | 'rain' | 'drizzle' | 'thunderstorm' | 'mist';
 
-// Lógica de Estações para o Nordeste/Ceará
 const getRegionSeason = (month: number): Season => {
-  // Quadra Chuvosa (Fev - Mai)
   if (month >= 1 && month <= 4) return 'rainy_season';
-  // Época dos Ventos (Ago - Out)
   if (month >= 7 && month <= 9) return 'windy_season';
-  // Seca / Verão (Resto)
   return 'dry_season';
 };
 
@@ -58,72 +54,55 @@ const normalizeWeather = (main: string): WeatherCondition => {
   return 'clear';
 };
 
-// --- CONFIGURAÇÃO VISUAL ---
-
-const getAtmosphereTheme = (
-  weather: WeatherCondition,
-  period: TimePeriod,
-  season: Season
-) => {
+const getAtmosphereTheme = (weather: WeatherCondition, period: TimePeriod, season: Season) => {
   let gradient = '';
   let particleType: 'sun' | 'moon' | 'cloud' | 'rain' | 'stars' | 'none' = 'none';
   const isDay = ['dawn', 'morning', 'noon', 'afternoon', 'golden_hour'].includes(period);
 
-  // 1. GRADIENTES BASE (Tempo e Estação)
   if (isDay) {
     if (period === 'golden_hour') {
-      gradient = 'bg-gradient-to-br from-orange-500 via-amber-500 to-purple-600'; // Pôr do sol Mulungu
+      gradient = 'bg-gradient-to-b from-orange-400 via-rose-400 to-purple-500'; 
       particleType = 'sun';
     } else if (period === 'dawn') {
-      gradient = 'bg-gradient-to-br from-indigo-400 via-purple-400 to-orange-300';
+      gradient = 'bg-gradient-to-b from-indigo-300 via-purple-300 to-orange-200';
       particleType = 'sun';
     } else if (period === 'noon') {
-       // Sol a pino
-       gradient = 'bg-gradient-to-br from-sky-400 via-blue-500 to-blue-600'; 
+       gradient = 'bg-gradient-to-b from-sky-400 via-blue-400 to-indigo-500'; 
        particleType = 'sun';
     } else {
-       // Dia comum
-       gradient = 'bg-gradient-to-br from-sky-300 via-sky-400 to-blue-500';
+       gradient = 'bg-gradient-to-b from-sky-300 via-sky-400 to-blue-500';
        particleType = 'sun';
     }
   } else {
-    // NOITE
     if (period === 'dusk') {
-      gradient = 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900';
+      gradient = 'bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900';
     } else if (period === 'midnight') {
-      gradient = 'bg-gradient-to-br from-slate-950 via-black to-indigo-950';
+      gradient = 'bg-gradient-to-b from-slate-950 via-gray-900 to-slate-900';
     } else {
-      gradient = 'bg-gradient-to-br from-blue-950 via-indigo-950 to-slate-900';
+      gradient = 'bg-gradient-to-b from-blue-900 via-indigo-900 to-slate-900';
     }
     
-    // Noites limpas no sertão têm estrelas
-    if (weather === 'clear' || weather === 'clouds') {
-      particleType = 'stars';
-    } else {
-      particleType = 'moon';
-    }
+    if (weather === 'clear' || weather === 'clouds') particleType = 'stars';
+    else particleType = 'moon';
   }
 
-  // 2. OVERRIDES DE CLIMA (Dominam a luz do sol)
   switch (weather) {
     case 'rain':
     case 'drizzle':
     case 'thunderstorm':
       gradient = isDay 
-        ? 'bg-gradient-to-br from-slate-600 via-slate-500 to-blue-800' // Dia chuvoso (cinza azulado)
-        : 'bg-gradient-to-br from-slate-900 via-gray-900 to-black';    // Noite chuvosa
+        ? 'bg-gradient-to-b from-slate-500 via-slate-600 to-slate-700' 
+        : 'bg-gradient-to-b from-slate-900 via-gray-900 to-black';
       particleType = 'rain';
       break;
     case 'clouds':
       if (isDay) {
-        gradient = 'bg-gradient-to-br from-slate-300 via-blue-200 to-white'; // Nublado claro
+        gradient = 'bg-gradient-to-b from-slate-300 via-slate-400 to-blue-300';
         particleType = 'cloud';
       }
       break;
     case 'mist':
-      gradient = isDay
-        ? 'bg-gradient-to-br from-slate-200 via-slate-300 to-gray-200' // Neblina serra
-        : 'bg-gradient-to-br from-slate-800 to-gray-900';
+      gradient = 'bg-gradient-to-b from-slate-300 via-gray-300 to-slate-400';
       particleType = 'cloud';
       break;
   }
@@ -134,24 +113,29 @@ const getAtmosphereTheme = (
 export const DynamicHero: React.FC<DynamicHeroProps> = ({ user }) => {
   const [localWeather, setLocalWeather] = useState<WeatherData | null>(null);
   const [mulunguWeather, setMulunguWeather] = useState<WeatherData | null>(null);
-  const [activeWeather, setActiveWeather] = useState<'local' | 'mulungu'>('local');
+  const [activeWeather, setActiveWeather] = useState<'local' | 'mulungu'>('mulungu');
+  
+  // Controle de UI e Automação
   const [canToggle, setCanToggle] = useState(false);
-  const [now, setNow] = useState(new Date());
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isAutoCycling, setIsAutoCycling] = useState(true); // Começa automático
+  const autoCycleTimerRef = useRef<any>(null); // Uso de any para compatibilidade com diferentes ambientes JS
 
-  // Mensagem de boas-vindas baseada na hora
+  const [now, setNow] = useState(new Date());
+  const [insight, setInsight] = useState<{ type: 'appointment' | 'alert' | 'weather', data: any } | null>(null);
+
   const { greeting, firstName } = useMemo(() => {
     const hour = now.getHours();
     let g = 'Bom dia';
     if (hour >= 12 && hour < 18) g = 'Boa tarde';
     else if (hour >= 18) g = 'Boa noite';
-
     return {
       greeting: g,
       firstName: user ? user.fullName.split(' ')[0] : 'Cidadão'
     };
   }, [user, now]);
 
-  // Busca de Dados
+  // 1. Carregamento de Dados
   useEffect(() => {
     let mounted = true;
     const timeInterval = setInterval(() => setNow(new Date()), 60000);
@@ -168,37 +152,95 @@ export const DynamicHero: React.FC<DynamicHeroProps> = ({ user }) => {
               const lon = pos.coords.longitude;
               const localData = await ContextService.getWeather(lat, lon);
               
-              if (mounted) {
+              if (mounted && localData) {
                 setLocalWeather(localData);
+                
                 const distLat = Math.abs(lat - MULUNGU_COORDS.lat);
                 const distLon = Math.abs(lon - MULUNGU_COORDS.lon);
-                
-                // Se estiver longe (> ~20km), permite alternar
-                if (distLat > 0.2 || distLon > 0.2) {
+                // Se a distância for relevante, habilita a troca
+                const isFar = distLat > 0.1 || distLon > 0.1;
+
+                if (isFar) {
                   setCanToggle(true);
                   setActiveWeather('local');
                 } else {
+                  // Se estiver em Mulungu, força Mulungu e desativa o ciclo
                   setCanToggle(false);
                   setActiveWeather('mulungu');
+                  setIsAutoCycling(false); 
                 }
               }
             },
-            () => { if (mounted) { setCanToggle(false); setActiveWeather('mulungu'); } },
-            { timeout: 5000 }
+            (err) => { 
+              console.warn("GPS Error", err);
+              if (mounted) { 
+                setCanToggle(false); 
+                setActiveWeather('mulungu');
+                setIsAutoCycling(false);
+              } 
+            },
+            { timeout: 8000 }
           );
-        } else {
-          if (mounted) { setCanToggle(false); setActiveWeather('mulungu'); }
         }
       } catch (e) { console.warn("Weather error"); }
     };
 
+    const loadInsights = async () => {
+      if (user) {
+        const notifs = await ContextService.getNotifications(user.id);
+        const appointment = notifs.find(n => n.type === 'appointment' && !n.read);
+        const alert = notifs.find(n => n.type === 'warning' && !n.read);
+        if (mounted) {
+          if (appointment) setInsight({ type: 'appointment', data: appointment });
+          else if (alert) setInsight({ type: 'alert', data: alert });
+          else setInsight({ type: 'weather', data: null });
+        }
+      } else {
+        if (mounted) setInsight({ type: 'weather', data: null });
+      }
+    }
+
     loadData();
+    loadInsights();
+    
     return () => { mounted = false; clearInterval(timeInterval); };
-  }, []);
+  }, [user]);
+
+  // 2. Lógica do Ciclo Automático (Contador)
+  useEffect(() => {
+    if (autoCycleTimerRef.current) clearInterval(autoCycleTimerRef.current);
+
+    if (canToggle && isAutoCycling && localWeather && mulunguWeather) {
+      autoCycleTimerRef.current = setInterval(() => {
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setActiveWeather(prev => prev === 'local' ? 'mulungu' : 'local');
+          setTimeout(() => setIsTransitioning(false), 50);
+        }, 300);
+      }, 8000); // 8 segundos
+    }
+
+    return () => {
+      if (autoCycleTimerRef.current) clearInterval(autoCycleTimerRef.current);
+    };
+  }, [canToggle, isAutoCycling, localWeather, mulunguWeather]);
+
+  // 3. Função de Alternância Manual
+  const handleManualToggle = () => {
+    if (!canToggle) return;
+    
+    // Pausa o ciclo automático ao interagir manualmente
+    setIsAutoCycling(false);
+
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setActiveWeather(prev => prev === 'local' ? 'mulungu' : 'local');
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 300);
+  };
 
   const displayWeather = activeWeather === 'local' ? (localWeather || mulunguWeather) : mulunguWeather;
 
-  // Cálculo do Tema Visual
   const theme = useMemo(() => {
     if (!displayWeather) return { gradient: 'bg-slate-200', particleType: 'none', isDay: true };
     const condition = normalizeWeather(displayWeather.main);
@@ -207,166 +249,210 @@ export const DynamicHero: React.FC<DynamicHeroProps> = ({ user }) => {
     return getAtmosphereTheme(condition, period, season);
   }, [displayWeather, now]);
 
-  const toggleWeather = () => {
-    if (!canToggle) return;
-    setActiveWeather(prev => prev === 'local' ? 'mulungu' : 'local');
-  };
-
-  // Ícone Dinâmico
   const WeatherIcon = useMemo(() => {
     if (!displayWeather) return Sun;
     const main = displayWeather.main.toLowerCase();
-    
     if (main.includes('rain')) return CloudRain;
     if (main.includes('thunder')) return CloudLightning;
     if (main.includes('drizzle')) return CloudRain;
     if (main.includes('snow')) return Snowflake;
     if (main.includes('mist') || main.includes('fog')) return CloudFog;
     if (main.includes('cloud')) return Cloud;
-    
     const h = now.getHours();
     if (h >= 17 && h < 18) return Sunset;
     return theme.isDay ? Sun : Moon;
   }, [displayWeather, theme.isDay, now]);
 
+  const transitionClass = `transition-all duration-700 ease-out transform ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`;
+  const dateStr = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+  const timeStr = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(now);
+
   return (
     <div className={`
-      relative w-full h-48 sm:h-52 rounded-b-[2.5rem] shadow-xl overflow-hidden 
-      transition-all duration-1000 ease-in-out 
+      relative w-full rounded-b-[2rem] shadow-xl overflow-hidden 
+      transition-all duration-1000 ease-in-out font-sans
       ${theme.gradient}
+      flex flex-col
     `}>
       
-      {/* --- CAMADA 1: ANIMAÇÕES DE FUNDO --- */}
-      
-      {/* Sol / Lua (Glow) */}
+      {/* BACKGROUND FX */}
       <div className={`absolute transition-all duration-1000 ${
         theme.particleType === 'sun' 
-          ? 'top-[-40px] right-[-40px] w-72 h-72 bg-gradient-to-br from-yellow-300/40 to-transparent rounded-full blur-3xl opacity-100' 
-          : theme.particleType === 'moon' || theme.particleType === 'stars'
-            ? 'top-[-20px] right-[-20px] w-40 h-40 bg-white/10 rounded-full blur-2xl opacity-100'
-            : 'opacity-0'
+          ? 'top-[-100px] right-[-100px] w-96 h-96 bg-gradient-to-br from-white/20 to-transparent rounded-full blur-3xl opacity-60' 
+          : 'opacity-0'
       }`} />
-
-      {/* Estrelas (CSS Animation) */}
+      
       {theme.particleType === 'stars' && (
-        <div className="absolute inset-0 z-0 opacity-80"
+        <div className="absolute inset-0 z-0 opacity-70 animate-pulse-slow"
              style={{
-               backgroundImage: 'radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px)',
-               backgroundSize: '550px 550px',
-               backgroundPosition: '0 0',
-               animation: 'twinkle 10s linear infinite'
+               backgroundImage: 'radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 3px)',
+               backgroundSize: '100px 100px',
              }}>
         </div>
       )}
 
-      {/* Chuva (CSS Animation) */}
       {theme.particleType === 'rain' && (
-        <div className="absolute inset-0 z-0 opacity-30 pointer-events-none" 
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" 
              style={{ 
-               backgroundImage: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.5), transparent)', 
-               backgroundSize: '1px 40px', 
+               backgroundImage: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.4), transparent)', 
+               backgroundSize: '1px 30px', 
                animation: 'rain 0.3s linear infinite' 
              }}>
         </div>
       )}
 
-      {/* Nuvens Flutuantes */}
-      {(theme.particleType === 'cloud' || theme.particleType === 'rain') && (
-        <>
-           <div className="absolute top-[-20px] left-[10%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float opacity-60" />
-           <div className="absolute bottom-[-40px] right-[20%] w-48 h-48 bg-white/10 rounded-full blur-3xl animate-float-delayed opacity-50" />
-        </>
-      )}
-
-      {/* --- CAMADA 2: CONTEÚDO --- */}
-      <div className="relative h-full flex flex-col justify-between p-6 z-10 text-white">
+      {/* CONTENT LAYER */}
+      <div className="relative z-10 px-5 pt-6 pb-5 flex flex-col gap-4 text-white">
         
-        {/* Topo: Localização */}
+        {/* TOP ROW: HEADER & WEATHER */}
         <div className="flex justify-between items-start">
-          <button 
-            onClick={toggleWeather}
-            disabled={!canToggle}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-md transition-all duration-300
-              ${canToggle 
-                ? 'bg-black/10 border-white/20 hover:bg-black/20 cursor-pointer active:scale-95' 
-                : 'bg-white/10 border-white/10 cursor-default pl-3'}
-            `}
-          >
-            <MapPin className="w-4 h-4 text-white drop-shadow-sm" />
-            <div className="flex flex-col items-start leading-none">
-              <span className="text-[10px] uppercase font-medium opacity-80 tracking-wide">Previsão em</span>
-              <span className="text-xs sm:text-sm font-bold tracking-wider uppercase truncate max-w-[150px] drop-shadow-md">
-                {displayWeather ? displayWeather.city : 'MULUNGU - CE'}
-              </span>
-            </div>
-            {canToggle && (
-              <RefreshCcw className="w-3.5 h-3.5 text-white/80 ml-1" />
-            )}
-          </button>
-        </div>
-
-        {/* Base: Informações Principais */}
-        <div className="flex items-end justify-between w-full pb-2">
           
-          {/* Saudação e Dados */}
-          <div className="flex-1">
-            <p className="text-sm font-medium opacity-90 mb-0.5 drop-shadow-md text-white/90">
-              {greeting},
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold leading-tight drop-shadow-lg truncate max-w-[220px] tracking-tight">
-              {firstName}
-            </h2>
-            
-            {/* Chips de Clima */}
-            {displayWeather && (
-              <div className="flex items-center gap-2 mt-3 animate-slide-in">
-                <div className="flex items-center gap-1.5 bg-white/20 px-2.5 py-1.5 rounded-lg backdrop-blur-md border border-white/10 shadow-sm" title="Vento">
-                  <Wind className="w-3.5 h-3.5" /> 
-                  <span className="text-[10px] font-bold">{displayWeather.wind} km/h</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white/20 px-2.5 py-1.5 rounded-lg backdrop-blur-md border border-white/10 shadow-sm" title="Umidade">
-                  <Droplets className="w-3.5 h-3.5" /> 
-                  <span className="text-[10px] font-bold">{displayWeather.humidity}%</span>
-                </div>
-              </div>
-            )}
+          {/* LEFT: Greeting */}
+          <div className="space-y-0.5">
+             <div className="flex items-center gap-2 opacity-80 mb-1">
+                <span className="text-[10px] font-semibold tracking-widest uppercase bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                  {greeting}
+                </span>
+             </div>
+             <h1 className="text-3xl sm:text-4xl font-light tracking-tight leading-none drop-shadow-md">
+                {firstName}
+             </h1>
+             <p className="text-xs font-medium opacity-70 capitalize mt-1 flex items-center gap-1.5">
+                <Calendar className="w-3 h-3" />
+                {dateStr}
+             </p>
           </div>
 
-          {/* Temperatura e Ícone */}
-          <div className="flex flex-col items-end">
-            {displayWeather ? (
-              <div className="flex flex-col items-end animate-fade-in">
-                <div className="relative">
-                  <WeatherIcon className={`
-                    w-12 h-12 text-white drop-shadow-xl mb-1
-                    ${theme.isDay ? 'animate-pulse-slow' : ''}
-                    ${theme.particleType === 'rain' ? 'animate-bounce' : ''}
-                  `} />
-                  {/* Indicador de "Sensação" se estiver muito quente */}
-                  {displayWeather.temp > 32 && (
-                    <div className="absolute -top-1 -right-1">
-                       <ThermometerSun className="w-4 h-4 text-orange-300 drop-shadow-sm animate-pulse" />
+          {/* RIGHT: Weather & Toggle */}
+          <div className={`flex flex-col items-end ${transitionClass}`}>
+             <div className="flex items-start">
+                <span className="text-5xl sm:text-6xl font-thin tracking-tighter leading-none drop-shadow-lg">
+                  {displayWeather ? Math.round(displayWeather.temp) : '--'}°
+                </span>
+                <div className="mt-1 ml-2 animate-float">
+                   <WeatherIcon className={`w-10 h-10 drop-shadow-lg opacity-90 ${theme.particleType === 'rain' ? 'animate-bounce' : ''}`} />
+                   {displayWeather && displayWeather.temp > 32 && (
+                    <div className="absolute -top-2 -right-2 animate-pulse">
+                      <ThermometerSun className="w-4 h-4 text-orange-300" />
                     </div>
-                  )}
+                   )}
                 </div>
+             </div>
+             
+             {/* Pill Button - Location Toggle */}
+             <button 
+                onClick={handleManualToggle}
+                disabled={!canToggle || isTransitioning}
+                className={`
+                  group flex items-center justify-end gap-1.5 mt-2 px-3 py-1.5 rounded-full border transition-all duration-300 relative overflow-hidden
+                  ${canToggle 
+                    ? 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer shadow-sm active:scale-95' 
+                    : 'bg-white/10 border-white/10 cursor-default opacity-80'}
+                `}
+             >
+                {/* Timer Bar Indicador (Visual Cue) */}
+                {isAutoCycling && canToggle && (
+                   <div className="absolute bottom-0 left-0 h-[2px] bg-white/50 w-full animate-[width_8s_linear_infinite]" style={{ width: '0%' }}></div>
+                )}
+
+                {activeWeather === 'local' 
+                   ? <Navigation className="w-3 h-3 opacity-90" />
+                   : <MapPin className="w-3 h-3 opacity-90" />
+                }
                 
-                <span className="text-6xl font-bold tracking-tighter drop-shadow-2xl leading-none -mr-1">
-                  {displayWeather.temp}°
+                <span className="text-[10px] font-bold tracking-wide uppercase leading-none z-10">
+                   {displayWeather ? displayWeather.city : 'Mulungu'}
                 </span>
-                
-                <span className="text-[10px] font-bold uppercase tracking-widest mt-1 px-3 py-1 rounded-full backdrop-blur-md bg-white/10 border border-white/10 shadow-sm">
-                  {displayWeather.description}
-                </span>
-              </div>
-            ) : (
-              <div className="flex flex-col items-end opacity-50">
-                <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                <span className="text-xs">Sincronizando...</span>
-              </div>
-            )}
+
+                {canToggle && (
+                   <RefreshCcw className={`w-3 h-3 opacity-80 ml-0.5 ${isAutoCycling ? 'animate-spin-slow' : ''} ${isTransitioning ? 'animate-spin' : ''}`} />
+                )}
+             </button>
+
+             <p className="text-[9px] uppercase font-bold opacity-60 tracking-widest mt-1 mr-1">
+                {displayWeather?.description}
+             </p>
           </div>
         </div>
+
+        {/* BOTTOM ROW: SMART INSIGHT BAR */}
+        <div className="mt-2">
+           <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-3 flex items-center gap-3 shadow-lg ring-1 ring-white/5 transition-all duration-500 hover:bg-white/15">
+              
+              {insight?.type === 'appointment' ? (
+                 <>
+                    <div className="bg-white text-mulungu-600 p-2.5 rounded-full shadow-sm shrink-0 animate-pulse-slow">
+                       <Clock className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[9px] font-bold uppercase tracking-widest opacity-70">Próximo Compromisso</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                       </div>
+                       <h3 className="text-sm font-bold leading-tight truncate">{insight.data.title}</h3>
+                       <p className="text-[10px] opacity-80 truncate">{insight.data.message}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 opacity-50" />
+                 </>
+
+              ) : insight?.type === 'alert' ? (
+                 <>
+                    <div className="bg-amber-100 text-amber-600 p-2.5 rounded-full shadow-sm shrink-0 animate-bounce">
+                       <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                       <span className="text-[9px] font-bold uppercase tracking-widest text-amber-200">Atenção Necessária</span>
+                       <h3 className="text-sm font-bold leading-tight truncate">{insight.data.title}</h3>
+                       <p className="text-[10px] opacity-80 truncate">{insight.data.message}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 opacity-50" />
+                 </>
+
+              ) : (
+                 <>
+                    <div className="flex items-center justify-between w-full px-1">
+                       
+                       <div className="flex items-center gap-2.5">
+                          <div className="bg-white/10 p-1.5 rounded-full">
+                             <Clock className="w-4 h-4 opacity-90" />
+                          </div>
+                          <div>
+                             <p className="text-[9px] uppercase font-bold opacity-60 tracking-wider">Hora Certa</p>
+                             <p className="text-base font-mono font-medium leading-none">{timeStr}</p>
+                          </div>
+                       </div>
+
+                       <div className="w-px h-6 bg-white/20 mx-2"></div>
+
+                       <div className="flex items-center gap-2.5">
+                          <div className="bg-white/10 p-1.5 rounded-full">
+                             <Wind className="w-4 h-4 opacity-90" />
+                          </div>
+                          <div>
+                             <p className="text-[9px] uppercase font-bold opacity-60 tracking-wider">Vento</p>
+                             <p className="text-sm font-medium leading-none">{displayWeather?.wind || 0} <span className="text-[9px]">km/h</span></p>
+                          </div>
+                       </div>
+
+                       <div className="w-px h-6 bg-white/20 mx-2 hidden sm:block"></div>
+
+                       <div className="hidden sm:flex items-center gap-2.5">
+                          <div className="bg-white/10 p-1.5 rounded-full">
+                             <Droplets className="w-4 h-4 opacity-90" />
+                          </div>
+                          <div>
+                             <p className="text-[9px] uppercase font-bold opacity-60 tracking-wider">Umidade</p>
+                             <p className="text-sm font-medium leading-none">{displayWeather?.humidity || 0}%</p>
+                          </div>
+                       </div>
+
+                    </div>
+                 </>
+              )}
+
+           </div>
+        </div>
+
       </div>
     </div>
   );

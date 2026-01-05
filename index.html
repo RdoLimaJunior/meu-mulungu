@@ -132,32 +132,40 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Criação inline do Service Worker para cache básico
-          const swContent = `
-            const CACHE_NAME = 'mulungu-v1';
-            const urlsToCache = ['/', '/index.html'];
-            
-            self.addEventListener('install', event => {
-              event.waitUntil(
-                caches.open(CACHE_NAME)
-                  .then(cache => cache.addAll(urlsToCache))
-              );
-            });
+          // ATUALIZADO: v2 para limpar cache antigo
+          const CACHE_NAME = 'mulungu-v2';
+          const urlsToCache = ['/', '/index.html'];
+          
+          self.addEventListener('install', event => {
+            // Força o novo service worker a assumir o controle imediatamente
+            self.skipWaiting();
+            event.waitUntil(
+              caches.open(CACHE_NAME)
+                .then(cache => cache.addAll(urlsToCache))
+            );
+          });
 
-            self.addEventListener('fetch', event => {
-              event.respondWith(
-                caches.match(event.request)
-                  .then(response => response || fetch(event.request))
-              );
-            });
-          `;
-          
-          const blob = new Blob([swContent], {type: 'application/javascript'});
-          const swUrl = URL.createObjectURL(blob);
-          
-          navigator.serviceWorker.register(swUrl)
-            .then(reg => console.log('SW registrado', reg))
-            .catch(err => console.log('SW falhou', err));
+          self.addEventListener('activate', event => {
+             // Limpa caches antigos
+             event.waitUntil(
+               caches.keys().then(cacheNames => {
+                 return Promise.all(
+                   cacheNames.map(cache => {
+                     if (cache !== CACHE_NAME) {
+                       return caches.delete(cache);
+                     }
+                   })
+                 );
+               })
+             );
+          });
+
+          self.addEventListener('fetch', event => {
+            event.respondWith(
+              caches.match(event.request)
+                .then(response => response || fetch(event.request))
+            );
+          });
         });
       }
     </script>
